@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NH MAC TT — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{-webkit-tap-highlight-color:rgba(0,0,0,0);box-sizing:border-box;margin:0;padding:0;}
+button,a,div,span,img,input,textarea,select,label{outline:none;-webkit-tap-highlight-color:transparent;}
+img{-webkit-user-drag:none;-webkit-touch-callout:none;user-select:none;}
+body{user-select:none;-webkit-user-select:none;font-family:'Rajdhani',sans-serif;background:#f4f6fb;color:#0a0a1a;overflow-x:hidden;}
+input,textarea{user-select:text;-webkit-user-select:text;}
+:focus{outline:none;}
+button,a{cursor:pointer;}
+
+:root{
+  --blue:#1a6fff;--blue-dark:#0d4fd4;--blue-light:#4d8fff;--blue-pale:#e8f0ff;
+  --black:#0a0a1a;--white:#ffffff;--gray:#f4f6fb;--gray2:#e8ecf5;
+  --text:#0a0a1a;--text2:#4a5280;--border:#d0d8f0;
+  --green:#00c853;--orange:#ff6b00;--red:#ff3b3b;
+}
+
+/* ─── LOADER ─── */
+#loader{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.loader-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(36px,10vw,72px);letter-spacing:-2px;display:flex;align-items:center;gap:4px;}
+.loader-logo .n-letter{display:inline-block;opacity:0;transform:translateY(20px) scale(0.8);animation:sReveal 0.9s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards;color:var(--blue);}
+.loader-logo .h-letter{display:inline-block;opacity:0;transform:translateY(20px);animation:sReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.35s forwards;}
+.loader-logo .era-text{display:inline-block;opacity:0;transform:translateX(10px);animation:fadeSlide 0.6s ease 0.8s forwards;color:var(--blue);margin-left:8px;font-size:0.45em;letter-spacing:4px;}
+.loader-bar{width:180px;height:2px;background:var(--gray2);margin-top:24px;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0;background:var(--blue);border-radius:2px;animation:barFill 1.4s ease 0.3s forwards;}
+@keyframes sReveal{0%{opacity:0;transform:translateY(20px) scale(0.8);}60%{opacity:1;transform:translateY(-4px) scale(1.05);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+@keyframes barFill{from{width:0;}to{width:100%;}}
+
+/* ─── NAV ─── */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1.5px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;color:var(--black);text-decoration:none;display:flex;align-items:center;gap:2px;}
+.nav-logo .era{color:var(--blue);}
+.nav-tag{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:#fff;background:var(--black);padding:4px 9px;border-radius:4px;margin-left:8px;}
+.logout-btn{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:7px 14px;border:1.5px solid var(--black);background:transparent;color:var(--black);border-radius:4px;letter-spacing:1px;transition:all 0.2s;display:none;}
+.logout-btn:hover{background:var(--black);color:#fff;}
+
+/* ─── VIEWS ─── */
+.view{display:none;}
+.view.active{display:block;animation:viewIn 0.5s cubic-bezier(.16,1,.3,1) both;}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─── PASSWORD GATE ─── */
+.gate-wrap{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:24px;}
+.panel-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:32px 28px;max-width:380px;width:100%;}
+.panel-title{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:var(--black);margin-bottom:8px;}
+.panel-text{font-size:14px;color:var(--text2);line-height:1.6;}
+.field-input{width:100%;background:var(--gray);border:1.5px solid var(--border);border-radius:8px;padding:13px 14px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;color:var(--black);transition:border-color 0.2s,background 0.2s;margin-top:16px;letter-spacing:2px;text-align:center;}
+.field-input:focus{border-color:var(--blue);background:#fff;}
+.field-input::placeholder{letter-spacing:1px;font-weight:500;}
+.primary-btn{width:100%;background:var(--blue);color:#fff;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:14px;border:none;border-radius:8px;transition:background 0.2s,transform 0.1s;text-transform:uppercase;margin-top:12px;}
+.primary-btn:hover{background:var(--blue-dark);}
+.primary-btn:active{transform:scale(0.98);}
+.gate-hint{font-size:11px;color:var(--text2);opacity:0.55;margin-top:14px;text-align:center;}
+.gate-error{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--red);margin-top:10px;display:none;text-align:center;}
+.gate-error.show{display:block;}
+
+/* ─── ADMIN LAYOUT ─── */
+.admin-wrap{max-width:1200px;margin:0 auto;padding:24px 16px 80px;}
+.admin-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:22px;}
+.eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--blue);text-transform:uppercase;margin-bottom:5px;}
+.admin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;letter-spacing:0.5px;color:var(--black);}
+
+/* ─── STATS ROW ─── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;}
+.stat-number{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;line-height:1;}
+.stat-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;}
+
+/* ─── SEARCH + FILTERS ─── */
+.controls-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px;}
+.search-wrap{position:relative;flex:1;min-width:220px;}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:0.4;pointer-events:none;}
+.search-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:12px 14px 12px 42px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--black);transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--blue);}
+.search-input::placeholder{color:var(--text2);opacity:0.6;}
+.chips-row{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:8px 16px;border-radius:9999px;border:1.5px solid var(--border);background:#fff;color:var(--text2);transition:all 0.2s;}
+.chip.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.chip:hover:not(.active){border-color:var(--blue);color:var(--blue);}
+
+/* ─── TABLE ─── */
+.table-wrap{background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead tr{background:var(--gray);}
+th{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.8px;color:var(--text2);text-transform:uppercase;padding:14px 18px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap;}
+td{padding:14px 18px;border-bottom:1px solid var(--gray2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr{transition:background 0.12s;cursor:pointer;}
+tbody tr:hover{background:#fafbff;}
+
+.td-ign{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:800;color:var(--black);}
+.td-guild{font-size:13px;font-weight:600;color:var(--blue);}
+.td-phone{font-family:ui-monospace,monospace;font-size:12px;color:var(--text2);}
+.td-age{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;text-align:center;}
+.td-date{font-size:12px;color:var(--text2);}
+
+/* ─── STATUS PILL ─── */
+.status-pill{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:5px 12px;border-radius:9999px;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.pill-pending{background:rgba(255,107,0,0.1);color:var(--orange);border:1.5px solid rgba(255,107,0,0.35);}
+.pill-confirmed{background:rgba(0,200,83,0.1);color:var(--green);border:1.5px solid rgba(0,200,83,0.35);}
+.pill-rejected{background:rgba(255,59,59,0.1);color:var(--red);border:1.5px solid rgba(255,59,59,0.35);}
+
+/* ─── TABLE ACTION BUTTONS ─── */
+.tbl-actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;}
+.tbl-btn{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;padding:7px 12px;border-radius:6px;border:none;transition:opacity 0.2s,transform 0.1s;white-space:nowrap;}
+.tbl-btn:active{transform:scale(0.95);}
+.tbl-btn:hover{opacity:0.82;}
+.tbl-view{background:var(--gray2);color:var(--text2);border:1.5px solid var(--border);}
+.tbl-confirm{background:var(--green);color:#fff;}
+.tbl-reject{background:var(--red);color:#fff;}
+
+/* ─── EMPTY STATE ─── */
+.empty-state{text-align:center;padding:70px 20px;}
+.empty-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text2);margin-bottom:8px;}
+.empty-sub{font-size:13px;color:var(--text2);opacity:0.55;}
+
+/* ─── DETAIL MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,10,26,0.65);z-index:300;opacity:0;pointer-events:none;transition:opacity 0.25s;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+
+.detail-box{background:#fff;border-radius:18px;width:100%;max-width:880px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px) scale(0.97);opacity:0;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1),opacity 0.3s;}
+.modal-overlay.open .detail-box{transform:translateY(0) scale(1);opacity:1;}
+
+.detail-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1.5px solid var(--gray2);flex-shrink:0;}
+.detail-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--black);}
+.modal-close-btn{width:30px;height:30px;border-radius:50%;background:var(--gray);border:none;display:flex;align-items:center;justify-content:center;color:var(--text2);}
+.modal-close-btn:hover{background:var(--gray2);}
+
+.detail-body{display:grid;grid-template-columns:1fr 1fr;overflow-y:auto;flex:1;}
+@media(max-width:680px){.detail-body{grid-template-columns:1fr;}}
+
+.detail-left{padding:22px;border-right:1.5px solid var(--gray2);}
+@media(max-width:680px){.detail-left{border-right:none;border-bottom:1.5px solid var(--gray2);}}
+.detail-right{padding:22px;}
+
+.section-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:14px;}
+
+.detail-rows{display:flex;flex-direction:column;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid var(--gray2);font-size:13px;gap:10px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row .lbl{color:var(--text2);white-space:nowrap;}
+.detail-row .val{color:var(--black);font-weight:700;text-align:right;word-break:break-all;}
+.wa-link{color:var(--green);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+
+.detail-status-row{display:flex;justify-content:center;margin-top:14px;}
+.status-badge{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;padding:7px 18px;border-radius:9999px;text-transform:uppercase;}
+.badge-pending{background:rgba(255,107,0,0.1);color:var(--orange);border:1.5px solid rgba(255,107,0,0.35);}
+.badge-confirmed{background:rgba(0,200,83,0.1);color:var(--green);border:1.5px solid rgba(0,200,83,0.35);}
+.badge-rejected{background:rgba(255,59,59,0.1);color:var(--red);border:1.5px solid rgba(255,59,59,0.35);}
+
+/* ─── PROOF IMAGE ─── */
+.proof-img-wrap{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--gray2);cursor:zoom-in;}
+.proof-img-wrap img{width:100%;height:100%;object-fit:contain;display:none;position:relative;z-index:1;background:#fff;}
+.proof-img-wrap .shimmer{position:absolute;inset:0;background:linear-gradient(100deg,#e8ecf5 30%,#f6f8fc 50%,#e8ecf5 70%);background-size:200% 100%;animation:shimmerMove 1.4s ease-in-out infinite;}
+@keyframes shimmerMove{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.no-proof{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--text2);font-size:13px;opacity:0.6;}
+.proof-dl-row{display:flex;justify-content:flex-end;margin-top:10px;}
+.proof-dl-btn{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;padding:7px 14px;border:1.5px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);text-decoration:none;transition:border-color 0.2s,color 0.2s;}
+.proof-dl-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* ─── DETAIL FOOTER ACTIONS ─── */
+.detail-foot{padding:16px 22px;border-top:1.5px solid var(--gray2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;flex-shrink:0;}
+.foot-right{display:flex;gap:8px;flex-wrap:wrap;}
+.act-btn{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:11px 20px;border:none;border-radius:8px;transition:opacity 0.2s,transform 0.1s;display:flex;align-items:center;gap:6px;}
+.act-btn:active{transform:scale(0.96);}
+.act-btn:disabled{opacity:0.38;pointer-events:none;}
+.act-confirm{background:var(--green);color:#fff;}
+.act-confirm:hover{opacity:0.85;}
+.act-reject{background:var(--orange);color:#fff;}
+.act-reject:hover{opacity:0.85;}
+.act-delete{background:#fff;color:var(--red);border:1.5px solid rgba(255,59,59,0.4);}
+.act-delete:hover{background:rgba(255,59,59,0.06);}
+.act-close{background:var(--gray2);color:var(--text2);}
+.act-close:hover{background:#dfe4f2;}
+
+/* ─── IMAGE ENLARGE MODAL ─── */
+.image-modal-box{max-width:720px;width:100%;transform:scale(0.96);opacity:0;transition:transform 0.25s,opacity 0.25s;}
+.modal-overlay.open .image-modal-box{transform:scale(1);opacity:1;}
+.image-modal-box img{width:100%;border-radius:14px;display:block;}
+.image-modal-close{display:block;margin:0 auto 10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 16px;border-radius:6px;cursor:pointer;}
+
+/* ─── DELETE CONFIRM MODAL ─── */
+.confirm-box{background:#fff;border-radius:16px;max-width:320px;width:100%;padding:26px 22px;text-align:center;transform:scale(0.95);opacity:0;transition:transform 0.25s,opacity 0.25s;}
+.modal-overlay.open .confirm-box{transform:scale(1);opacity:1;}
+.confirm-icon{font-size:32px;margin-bottom:10px;}
+.confirm-actions{display:flex;gap:8px;margin-top:18px;}
+.confirm-actions button{flex:1;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:12px;border:none;border-radius:8px;cursor:pointer;}
+.confirm-cancel{background:var(--gray2);color:var(--text2);}
+.confirm-yes{background:var(--red);color:#fff;}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:#fff;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;padding:12px 22px;border-radius:8px;z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ─── MOBILE ─── */
+@media(max-width:768px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  th,td{padding:11px 12px;}
+  .tbl-actions{gap:4px;}
+  .tbl-btn{padding:6px 9px;font-size:7.5px;}
+  th:nth-child(3),td:nth-child(3),
+  th:nth-child(4),td:nth-child(4){display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">
+    <span class="n-letter">N</span>
+    <span class="h-letter">H</span>
+    <span class="era-text">ESPORTS</span>
+  </div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">NH <span class="era">ESPORTS</span><span class="nav-tag">ADMIN</span></a>
+  <button class="logout-btn" id="logout-btn" onclick="logoutAdmin()">LOCK</button>
+</nav>
+
+<!-- ════ PASSWORD GATE ════ -->
+<div class="view" id="view-gate">
+  <div class="gate-wrap">
+    <div class="panel-card">
+      <div class="panel-title">ADMIN ACCESS</div>
+      <div class="panel-text">NH MAC TT Tournament — Enter the admin password to manage registrations.</div>
+      <input type="password" id="admin-pass" class="field-input" placeholder="ENTER PASSWORD" autocomplete="off" onkeyup="if(event.key==='Enter') verifyPassword()">
+      <button class="primary-btn" onclick="verifyPassword()">ACCESS DASHBOARD</button>
+      <div class="gate-error" id="gate-error">INCORRECT PASSWORD</div>
+      <div class="gate-hint">Default: <strong>NHMACADMIN</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div class="view" id="view-admin">
+  <div class="admin-wrap">
+
+    <div class="admin-head">
+      <div>
+        <div class="eyebrow">CONTROL PANEL</div>
+        <div class="admin-title">TOURNAMENT REGISTRATIONS</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">TOTAL</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-pending" style="color:var(--orange)">0</div>
+        <div class="stat-label">PENDING</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-confirmed" style="color:var(--green)">0</div>
+        <div class="stat-label">CONFIRMED</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-rejected" style="color:var(--red)">0</div>
+        <div class="stat-label">REJECTED</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-row">
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5280" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Search IGN or Guild..." oninput="filterTable()">
+      </div>
+      <div class="chips-row">
+        <div class="chip active" data-filter="all" onclick="setFilter('all')">ALL</div>
+        <div class="chip" data-filter="pending" onclick="setFilter('pending')">PENDING</div>
+        <div class="chip" data-filter="confirmed" onclick="setFilter('confirmed')">CONFIRMED</div>
+        <div class="chip" data-filter="rejected" onclick="setFilter('rejected')">REJECTED</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>IGN</th>
+            <th>GUILD</th>
+            <th>WHATSAPP</th>
+            <th>AGE</th>
+            <th>STATUS</th>
+            <th>DATE</th>
+            <th style="text-align:right;padding-right:18px;">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- EMPTY -->
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="empty-title">NO REGISTRATIONS FOUND</div>
+      <div class="empty-sub">Try a different filter or search term</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ DETAIL MODAL ════ -->
+<div class="modal-overlay" id="details-modal">
+  <div class="detail-box">
+    <div class="detail-head">
+      <div class="detail-title" id="details-modal-title">REGISTRATION DETAILS</div>
+      <button class="modal-close-btn" onclick="closeDetailsModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-body">
+      <!-- LEFT: form details -->
+      <div class="detail-left">
+        <div class="section-label">Registration Info</div>
+        <div class="detail-rows" id="details-info"></div>
+        <div class="detail-status-row" id="detail-status-row"></div>
+      </div>
+      <!-- RIGHT: proof image -->
+      <div class="detail-right">
+        <div class="section-label">Verification Proof</div>
+        <div class="proof-img-wrap" id="proof-img-wrap">
+          <div class="shimmer" id="proof-shimmer"></div>
+          <img id="proof-img" alt="Guild proof screenshot">
+          <div class="no-proof" id="no-proof-msg" style="display:none;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            No proof image uploaded
+          </div>
+        </div>
+        <div class="proof-dl-row">
+          <a id="proof-dl-link" href="#" download class="proof-dl-btn">DOWNLOAD PROOF</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-foot">
+      <button class="act-btn act-delete" id="modal-delete-btn" onclick="deleteCurrentRegistration()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        DELETE
+      </button>
+      <div class="foot-right">
+        <button class="act-btn act-confirm" id="modal-confirm-btn" onclick="updateCurrentStatus('confirmed')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          ACCEPT
+        </button>
+        <button class="act-btn act-reject" id="modal-reject-btn" onclick="updateCurrentStatus('rejected')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          REJECT
+        </button>
+        <button class="act-btn act-close" onclick="closeDetailsModal()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE ENLARGE -->
+<div class="modal-overlay" id="image-modal">
+  <div class="image-modal-box">
+    <button class="image-modal-close" onclick="document.getElementById('image-modal').classList.remove('open')">✕ CLOSE</button>
+    <img id="image-modal-img" src="" alt="Proof enlarged">
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="modal-overlay" id="confirm-delete-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="panel-title">DELETE REGISTRATION?</div>
+    <div class="panel-text" style="margin-top:8px;">This will permanently remove this entry and cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="document.getElementById('confirm-delete-modal').classList.remove('open')">CANCEL</button>
+      <button class="confirm-yes" id="confirm-delete-yes">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBoeQkpZiFQ5_2nbB-5NlTMmqN2Gx38ano",
+  authDomain: "nh-reg.firebaseapp.com",
+  projectId: "nh-reg",
+  storageBucket: "nh-reg.firebasestorage.app",
+  messagingSenderId: "443278604751",
+  appId: "1:443278604751:web:5afff08f3ac95f9fc2faba"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const ADMIN_PASSWORD = "NHMACADMIN";
+
+let allData = [];
+let currentFilter = "all";
+let currentSearch = "";
+let unsubscribe = null;
+let currentRegId = null;
+let currentRegData = null;
+let pendingDeleteId = null;
+
+/* ── LOADER ── */
+setTimeout(() => {
+  const loader = document.getElementById("loader");
+  loader.style.transition = "opacity 0.5s";
+  loader.style.opacity = "0";
+  setTimeout(() => {
+    loader.style.display = "none";
+    showView("view-gate");
+  }, 500);
+}, 1600);
+
+function showView(id) {
+  ["view-gate", "view-admin"].forEach(v => {
+    document.getElementById(v).classList.toggle("active", v === id);
+  });
+}
+
+/* ── PASSWORD ── */
+window.verifyPassword = function() {
+  const val = document.getElementById("admin-pass").value.trim();
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById("gate-error").classList.remove("show");
+    document.getElementById("logout-btn").style.display = "block";
+    showView("view-admin");
+    startRealtimeListener();
+  } else {
+    const inp = document.getElementById("admin-pass");
+    inp.value = "";
+    document.getElementById("gate-error").classList.add("show");
+    inp.style.borderColor = "var(--red)";
+    setTimeout(() => { inp.style.borderColor = "var(--border)"; }, 1200);
+  }
+};
+
+window.logoutAdmin = function() {
+  if (unsubscribe) unsubscribe();
+  showView("view-gate");
+  document.getElementById("logout-btn").style.display = "none";
+  document.getElementById("admin-pass").value = "";
+  document.getElementById("table-body").innerHTML = "";
+  allData = []; currentRegId = null; currentRegData = null;
+};
+
+/* ── REALTIME ── */
+function startRealtimeListener() {
+  if (unsubscribe) unsubscribe();
+  const q = query(collection(db, "leaders"), orderBy("createdAt", "desc"));
+  unsubscribe = onSnapshot(q, snap => {
+    allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStats();
+    renderTable();
+  });
+}
+
+function updateStats() {
+  document.getElementById("stat-total").textContent = allData.length;
+  document.getElementById("stat-pending").textContent = allData.filter(r => r.status === "pending").length;
+  document.getElementById("stat-confirmed").textContent = allData.filter(r => r.status === "confirmed").length;
+  document.getElementById("stat-rejected").textContent = allData.filter(r => r.status === "rejected").length;
+}
+
+/* ── TABLE ── */
+function renderTable() {
+  const tbody = document.getElementById("table-body");
+  const empty = document.getElementById("empty-state");
+  tbody.innerHTML = "";
+
+  let filtered = allData;
+  if (currentFilter !== "all") filtered = filtered.filter(r => r.status === currentFilter);
+  if (currentSearch) {
+    const term = currentSearch.toLowerCase();
+    filtered = filtered.filter(r =>
+      (r.ign && r.ign.toLowerCase().includes(term)) ||
+      (r.guildName && r.guildName.toLowerCase().includes(term))
+    );
+  }
+
+  empty.style.display = filtered.length ? "none" : "block";
+  document.querySelector(".table-wrap").style.display = filtered.length ? "block" : "none";
+
+  filtered.forEach(reg => {
+    const date = reg.createdAt
+      ? new Date(reg.createdAt.toDate()).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })
+      : "—";
+
+    const statusClass = { pending:"pill-pending", confirmed:"pill-confirmed", rejected:"pill-rejected" }[reg.status] || "pill-pending";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><div class="td-ign">${esc(reg.ign||"—")}</div></td>
+      <td><div class="td-guild">${esc(reg.guildName||"—")}</div></td>
+      <td><div class="td-phone">${esc(reg.whatsapp||"—")}</div></td>
+      <td class="td-age">${reg.age||"—"}</td>
+      <td><span class="status-pill ${statusClass}">${reg.status.toUpperCase()}</span></td>
+      <td class="td-date">${date}</td>
+      <td>
+        <div class="tbl-actions">
+          <button class="tbl-btn tbl-view" onclick="event.stopPropagation();viewDetails('${reg.id}')">DETAILS</button>
+          ${reg.status !== "confirmed" ? `<button class="tbl-btn tbl-confirm" onclick="event.stopPropagation();updateStatus('${reg.id}','confirmed')">✓</button>` : ""}
+          ${reg.status !== "rejected" ? `<button class="tbl-btn tbl-reject" onclick="event.stopPropagation();updateStatus('${reg.id}','rejected')">✕</button>` : ""}
+        </div>
+      </td>
+    `;
+    row.addEventListener("click", e => {
+      if (!e.target.closest("button")) viewDetails(reg.id);
+    });
+    tbody.appendChild(row);
+  });
+}
+
+window.setFilter = function(filter) {
+  currentFilter = filter;
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.dataset.filter === filter));
+  renderTable();
+};
+
+window.filterTable = function() {
+  currentSearch = document.getElementById("search-input").value.trim();
+  renderTable();
+};
+
+/* ── STATUS ── */
+window.updateStatus = async function(id, newStatus) {
+  try {
+    await updateDoc(doc(db, "leaders", id), { status: newStatus });
+    showToast(`STATUS → ${newStatus.toUpperCase()}`);
+    if (newStatus === "confirmed") {
+      const reg = allData.find(r => r.id === id);
+      if (reg && reg.whatsapp) setTimeout(() => openWhatsApp(reg.whatsapp, reg.ign), 700);
+    }
+  } catch(e) { showToast("FAILED TO UPDATE"); }
+};
+
+window.updateCurrentStatus = async function(newStatus) {
+  if (!currentRegId) return;
+  try {
+    await updateDoc(doc(db, "leaders", currentRegId), { status: newStatus });
+    showToast(`STATUS → ${newStatus.toUpperCase()}`);
+    if (newStatus === "confirmed" && currentRegData?.whatsapp) {
+      setTimeout(() => openWhatsApp(currentRegData.whatsapp, currentRegData.ign), 700);
+    }
+    closeDetailsModal();
+  } catch(e) { showToast("FAILED TO UPDATE"); }
+};
+
+/* ── DETAILS MODAL ── */
+window.viewDetails = function(id) {
+  const reg = allData.find(r => r.id === id);
+  if (!reg) return;
+  currentRegId = id;
+  currentRegData = reg;
+
+  document.getElementById("details-modal-title").innerHTML =
+    `DETAILS — <span style="color:var(--blue)">${esc(reg.ign||"Unknown")}</span>`;
+
+  // Info rows
+  const info = document.getElementById("details-info");
+  info.innerHTML = "";
+  const fields = [
+    { label: "IGN", value: reg.ign },
+    { label: "Guild Name", value: reg.guildName },
+    { label: "WhatsApp", value: reg.whatsapp, isPhone: true },
+    { label: "Age", value: reg.age },
+    { label: "Registered", value: reg.createdAt
+        ? new Date(reg.createdAt.toDate()).toLocaleString("en-IN",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})
+        : "—" }
+  ];
+  // add extra dynamic fields
+  const known = ["id","ign","guildName","whatsapp","age","status","createdAt","imageUrl","email"];
+  Object.keys(reg).filter(k => !known.includes(k)).forEach(k => {
+    const label = k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, " $1");
+    fields.push({ label, value: reg[k] });
+  });
+
+  fields.forEach(f => {
+    const row = document.createElement("div");
+    row.className = "detail-row";
+    const phone = f.isPhone ? normalizePhone(f.value) : null;
+    row.innerHTML = `
+      <span class="lbl">${f.label}</span>
+      ${f.isPhone
+        ? `<a class="wa-link" href="https://wa.me/${phone}" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+            ${esc(f.value||"—")}
+           </a>`
+        : `<b class="val">${esc(String(f.value||"—"))}</b>`
+      }
+    `;
+    info.appendChild(row);
+  });
+
+  // Status badge
+  const statusRow = document.getElementById("detail-status-row");
+  const cls = { pending:"badge-pending", confirmed:"badge-confirmed", rejected:"badge-rejected" }[reg.status] || "badge-pending";
+  statusRow.innerHTML = `<span class="status-badge ${cls}">${reg.status.toUpperCase()}</span>`;
+
+  // Modal action buttons
+  document.getElementById("modal-confirm-btn").disabled = reg.status === "confirmed";
+  document.getElementById("modal-reject-btn").disabled = reg.status === "rejected";
+
+  // Proof image
+  const img = document.getElementById("proof-img");
+  const shimmer = document.getElementById("proof-shimmer");
+  const noProof = document.getElementById("no-proof-msg");
+  const dlLink = document.getElementById("proof-dl-link");
+  const wrap = document.getElementById("proof-img-wrap");
+
+  img.style.display = "none";
+  shimmer.style.display = "block";
+  noProof.style.display = "none";
+
+  if (reg.imageUrl) {
+    img.onload = () => { shimmer.style.display = "none"; img.style.display = "block"; };
+    img.onerror = () => { shimmer.style.display = "none"; noProof.style.display = "flex"; };
+    img.src = reg.imageUrl;
+    dlLink.href = reg.imageUrl;
+    dlLink.download = `proof_${(reg.ign||"user").replace(/[^a-z0-9]/gi,"_")}.jpg`;
+    dlLink.style.display = "inline-flex";
+    wrap.onclick = () => {
+      document.getElementById("image-modal-img").src = reg.imageUrl;
+      document.getElementById("image-modal").classList.add("open");
+    };
+  } else {
+    shimmer.style.display = "none";
+    noProof.style.display = "flex";
+    dlLink.style.display = "none";
+    wrap.onclick = null;
+  }
+
+  document.getElementById("details-modal").classList.add("open");
+};
+
+window.closeDetailsModal = function() {
+  document.getElementById("details-modal").classList.remove("open");
+};
+
+/* ── DELETE ── */
+window.deleteCurrentRegistration = function() {
+  if (!currentRegId) return;
+  pendingDeleteId = currentRegId;
+  document.getElementById("confirm-delete-modal").classList.add("open");
+};
+
+document.getElementById("confirm-delete-yes").addEventListener("click", async () => {
+  if (!pendingDeleteId) return;
+  try {
+    await deleteDoc(doc(db, "leaders", pendingDeleteId));
+    showToast("REGISTRATION DELETED");
+    document.getElementById("confirm-delete-modal").classList.remove("open");
+    closeDetailsModal();
+  } catch(e) { showToast("DELETE FAILED"); }
+  pendingDeleteId = null;
+});
+
+/* ── WHATSAPP ── */
+function normalizePhone(raw) {
+  let d = (raw||"").replace(/\D/g,"");
+  if (d.length === 10) d = "91" + d;
+  else if (d.length === 11 && d.startsWith("0")) d = "91" + d.slice(1);
+  return d;
+}
+
+function openWhatsApp(whatsapp, ign) {
+  const phone = normalizePhone(whatsapp);
+  const msg = `🏆 NH MAC TT Tournament\n\n📢 Official Tournament Channel ⤵️\nhttps://whatsapp.com/channel/0029VbCV7TqLo4hlM05Vn53h\n\n🍷 Leaders Group ⤵️\nhttps://chat.whatsapp.com/IPDkI3GEl93GmTYKUjAYr2?s=cl&p=a&ilr=1\n\n⚠️ All team leaders are requested to join both the Official Channel and the Leaders Group to receive important updates, announcements, and match information.`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+/* ── HELPERS ── */
+function esc(str) {
+  return String(str||"").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[m]);
+}
+
+/* ── KEYBOARD ── */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    ["details-modal","image-modal","confirm-delete-modal"].forEach(id => {
+      document.getElementById(id).classList.remove("open");
+    });
+  }
+  if (e.key === "/" && document.getElementById("view-admin").classList.contains("active")) {
+    e.preventDefault();
+    document.getElementById("search-input").focus();
+  }
+});
+
+setTimeout(() => document.getElementById("admin-pass")?.focus(), 1800);
+</script>
+</body>
+</html>
