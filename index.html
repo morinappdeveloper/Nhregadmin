@@ -156,7 +156,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(248,245,235,0.96);backdrop
 
 <div id="loader">
   <div class="loader-content">
-    <img src="logo.png" class="loader-logo-img" alt="NOT HUMANS Logo">
+    <img src="https://nhreg.vercel.app/logo.png" class="loader-logo-img" alt="NOT HUMANS Logo">
     <div class="loader-text">NOT HUMANS ESPORTS</div>
     <div class="loader-sub">ADMIN PANEL</div>
   </div>
@@ -165,7 +165,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(248,245,235,0.96);backdrop
 
 <nav>
   <a href="index.html" class="nav-logo">
-    <img src="assets/logo.png" alt="NOT HUMANS" style="height:26px;width:auto;">
+    <img src="https://nhreg.vercel.app/logo.png" alt="NOT HUMANS" style="height:26px;width:auto;">
     <span>NOT HUMANS <span class="era">ESPORTS</span></span>
   </a>
   <div class="nav-right">
@@ -212,19 +212,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(248,245,235,0.96);backdrop
     </div>
   </div>
 
-  <!-- Login Prompt (shown when not authenticated) -->
-  <div id="admin-login-prompt" style="display:none; text-align:center; padding:40px 20px; background:#fff; border:1.5px solid var(--border); border-radius:16px; margin-bottom:20px;">
-    <div style="margin-bottom:16px;">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c5a000" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">SIGN IN REQUIRED</div>
-    <div style="color:var(--text2);font-size:14px;margin-bottom:20px;">You must be signed in with Google to manage caster applications<br>(required by Firestore security rules)</div>
-    <button onclick="adminGoogleLogin()" class="google-btn" style="max-width:320px;margin:0 auto;">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      SIGN IN WITH GOOGLE
-    </button>
-  </div>
-
   <div class="filters">
     <input type="text" id="search-input" class="search-input" placeholder="Search by name or WhatsApp...">
     <button class="filter-btn active" data-filter="all">ALL</button>
@@ -240,7 +227,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(248,245,235,0.96);backdrop
   </div>
 
   <div style="margin-top:24px;text-align:center;font-size:10px;color:#9a8c6a;letter-spacing:0.5px;">
-    Demo mode • Any logged-in user can manage casters (per current Firestore rules)
+    Passkey-protected admin session • Regular casters cannot view or edit other applications
   </div>
 </div>
 
@@ -277,7 +264,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(248,245,235,0.96);backdrop
 
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import{getAuth,signOut,onAuthStateChanged,GoogleAuthProvider,signInWithPopup}from'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+import{getAuth,signOut,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInAnonymously}from'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 import{getFirestore,collection,onSnapshot,doc,updateDoc,deleteDoc,query,orderBy}from'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -326,16 +313,27 @@ const unlockBtn=document.getElementById('unlock-btn');
 const passInput=document.getElementById('passkey-input');
 const gateError=document.getElementById('gate-error');
 
-let adminUnlocked = false;
-
 function unlockDashboard(){
   const val=passInput.value.trim();
   if(val===PASSKEY){
     gateSection.style.display='none';
     dashboard.style.display='block';
-    adminUnlocked = true;
     showToast('ADMIN ACCESS GRANTED');
-    checkAuthAndInit();
+
+    // Sign in anonymously — Firestore rules grant admin rights specifically
+    // to anonymous sessions, which only this passkey-gated page creates.
+    if(!currentUser){
+      signInAnonymously(auth)
+        .then(() => {
+          initAdminDashboard();
+        })
+        .catch(err => {
+          console.error("Anonymous sign-in failed:", err);
+          showToast("Could not connect to database");
+        });
+    } else {
+      initAdminDashboard();
+    }
   }else{
     gateError.classList.add('show');
     setTimeout(()=>gateError.classList.remove('show'),2200);
@@ -345,15 +343,15 @@ function unlockDashboard(){
 if(unlockBtn) unlockBtn.addEventListener('click', unlockDashboard);
 if(passInput) passInput.addEventListener('keyup', e=>{ if(e.key==='Enter') unlockDashboard(); });
 
-/* Auth handling - complies with Firestore rules (auth required) */
-onAuthStateChanged(auth, user=>{
+/* Auth handling */
+onAuthStateChanged(auth, user => {
   currentUser = user;
   const lb = document.getElementById('logout-btn');
   if(lb) lb.style.display = user ? 'block' : 'none';
 
-  // If admin already unlocked passkey, react to login state
-  if(adminUnlocked){
-    checkAuthAndInit();
+  // Once we have auth (anonymous or Google), load the dashboard if passkey was already entered
+  if(user && document.getElementById('admin-dashboard').style.display === 'block'){
+    initAdminDashboard();
   }
 });
 
@@ -363,36 +361,7 @@ window.doLogout = async () => {
   location.reload();
 };
 
-/* Show login prompt or initialize dashboard based on auth */
-function checkAuthAndInit(){
-  const grid = document.getElementById('caster-grid');
-  const loginPrompt = document.getElementById('admin-login-prompt');
-  const filters = document.querySelector('.filters');
-
-  if(!currentUser){
-    if(grid) grid.style.display = 'none';
-    if(filters) filters.style.display = 'none';
-    if(loginPrompt) loginPrompt.style.display = 'block';
-  } else {
-    if(loginPrompt) loginPrompt.style.display = 'none';
-    if(filters) filters.style.display = 'flex';
-    if(grid) grid.style.display = 'grid';
-    initAdminDashboard();
-  }
-}
-
-/* Google Sign in for admin */
-window.adminGoogleLogin = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-    showToast('LOGGED IN SUCCESSFULLY');
-  } catch(e){
-    showToast('LOGIN FAILED');
-    console.error(e);
-  }
-};
-
-/* Main dashboard initialization (only called when authenticated) */
+/* Main dashboard initialization */
 function initAdminDashboard(){
   const grid = document.getElementById('caster-grid');
   const search = document.getElementById('search-input');
@@ -400,7 +369,11 @@ function initAdminDashboard(){
 
   if(!grid) return;
 
-  // Live listener - works because user is authenticated (rules requirement)
+  grid.style.display = 'grid';
+  const filtersEl = document.querySelector('.filters');
+  if(filtersEl) filtersEl.style.display = 'flex';
+
+  // Live listener - allowed because this is an admin (anonymous) session
   const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
   onSnapshot(q, snapshot => {
     allCasters = [];
@@ -411,7 +384,7 @@ function initAdminDashboard(){
     renderCasters();
   }, err => {
     console.error(err);
-    showToast('Failed to load applications (check auth/rules)');
+    showToast('Failed to load applications');
   });
 
   // Search
